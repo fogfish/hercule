@@ -1,0 +1,17 @@
+{application, hercule,
+   [
+      {description, "knowledge deduction application"},
+      {vsn,         "0.0.0"},
+      {modules,     []},
+      {registered,  []},
+      {applications,[
+         kernel
+        ,stdlib
+        ,lager
+        ,restd
+        ,esio
+      ]},
+      {mod, {hercule_app, []}},
+      {env, []}
+   ]
+}.  
