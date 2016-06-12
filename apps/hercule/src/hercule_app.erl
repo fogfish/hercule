@@ -9,6 +9,7 @@
 %%
 %%
 start(_Type, _Args) ->
+   ets:new(hercule, [set, public, named_table]),
    hercule_sup:start_link(). 
 
 %%
