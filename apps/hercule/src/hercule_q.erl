@@ -28,7 +28,13 @@ content_accepted(_Req) ->
    Uri = uri:new( opts:val(storage, hercule) ),
    Ns  = lens:get(lens:pair(<<"ns">>), Env),
    Id  = lens:get(lens:pair(<<"id">>), Env),
-   Heap= lists:foldl(fun({Key, Val}, Acc) -> Acc#{scalar:atom(Key) => Val} end, #{}, uri:q(Url)),
+   Heap= lists:foldl(
+      fun({Key, Val}, Acc) -> 
+         Acc#{scalar:atom(Key) => scalar:decode(Val)} 
+      end, 
+      #{}, 
+      uri:q(Url)
+   ),
    [{_, Fn}] = ets:lookup(hercule, Id),
    {ok, Sock} = esio:socket(uri:segments([Ns], Uri)),
    Stream = datalog:q(Fn, Heap, Sock),
