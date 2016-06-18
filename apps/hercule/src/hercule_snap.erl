@@ -1,6 +1,6 @@
 %% @doc
-%%
--module(hercule_q).
+%%   resource snapshot resource
+-module(hercule_snap).
 
 -export([
    allowed_methods/1,
@@ -19,11 +19,13 @@ content_provided(_Req) ->
 
 %%
 content_accepted(_Req) ->
-   [{text, datalog}].
+   [{application, json}].
 
 
-'PUT'({application, json}, Datalog, {Url, _Head, Env}) ->
-   Snap = hercule:q(lens:get(lens:pair(<<"ns">>), Env), Datalog),
+'PUT'({application, json}, Json, {Url, _Head, Env}) ->
+   [{_, Fn, _}] = ets:lookup(hercule, lens:get(lens:pair(<<"id">>), Env)),
+   Heap = jsx:decode(Json, [return_maps, {labels, atom}]), %% @todo: use existing_atom | attempt_atom
+   Snap = hercule:q(lens:get(lens:pair(<<"ns">>), Env), Heap, Fn),
    {ok, jsx:encode( stream:list(Snap) )}.
 
 % %%
