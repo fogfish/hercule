@@ -24,31 +24,9 @@ content_accepted(_Req) ->
 
 'PUT'({application, json}, Datalog, {Url, _Head, Env}) ->
    Snap = hercule:q(lens:get(lens:pair(<<"ns">>), Env), Datalog),
-   {ok, jsx:encode( stream:list(Snap) )}.
-
-% %%
-% %%
-% 'GET'(_, {Url, _Head, Env}) ->
-%    Uri = uri:new( opts:val(storage, hercule) ),
-%    Ns  = lens:get(lens:pair(<<"ns">>), Env),
-%    Id  = lens:get(lens:pair(<<"id">>), Env),
-%    Heap= lists:foldl(
-%       fun({Key, Val}, Acc) -> 
-%          Acc#{scalar:atom(Key) => scalar:decode(Val)} 
-%       end, 
-%       #{}, 
-%       uri:q(Url)
-%    ),
-%    [{_, Fn}] = ets:lookup(hercule, Id),
-%    {ok, Sock} = esio:socket(uri:segments([Ns], Uri)),
-%    Stream = datalog:q(Fn, Heap, Sock),
-%    {200, jsx:encode( stream:list(Stream) )}.
-   
-% %%
-% %%
-% 'PUT'(_, {_Url, _Head, Env}, Datalog) ->
-%    Id = lens:get(lens:pair(<<"id">>), Env),
-%    Fn = elasticlog:c( scalar:c(Datalog) ),
-%    ets:insert(hercule, {Id, Fn}),
-%    ok.
-
+   case scalar:i( uri:q(<<"n">>, 0, Url) ) of
+      0 ->
+         {ok, jsx:encode( stream:list(Snap) )};
+      N ->
+         {ok, jsx:encode( stream:list(N, Snap) )}
+   end.

@@ -10,6 +10,7 @@
         ,lager
         ,restd
         ,esio
+        ,elasticnt
       ]},
       {mod, {hercule_app, []}},
       {env, []}
