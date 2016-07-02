@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://talkslab.github.io/metro-bootstrap/dist/css/metro-bootstrap.min.css">
+<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Roboto:400,500,500italic,700,700italic,400italic,300italic,300">
+<style>
+html
+{
+   height: 100%;
+}
+
+body 
+{
+   font-family: "Helvetica Neue", Helvetica, sans-serif;
+   width: 100%;
+   height: 100%;
+   padding-top: 50px;
+   padding-bottom: 0px;
+   overflow: hidden;
+}
+
+.container
+{
+   width: 100%;
+   padding: 0;
+   margin: 0;
+   min-height: 100%;
+   height: 100%;
+   position: relative;
+   overflow: scroll;
+}
+
+.datalog,
+.history,
+.content
+{
+   width: 100%;
+   padding-left: 1em;
+   padding-right: 1em;
+}
+
+.datalog textarea
+{
+   width: 100%;
+   height: 10em;
+}
+
+.source-code
+{
+   font-family: "Roboto", "Courier", monospace;
+   font-weight: 200;
+   font-size: 12px;
+}
+
+/* visualization */
+.node {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+.link 
+{
+  stroke: #ddd;
+  stroke-opacity: .6;
+}
+
+.hovered 
+{
+  stroke: #ddd;
+  stroke-opacity: .8;
+  stroke-width: 2;   
+}
+
+.selected 
+{
+  stroke: #f10049;
+  stroke-opacity: 1;
+  stroke-width: 1;
+}
+
+.active
+{
+  stroke: #f10049;
+  stroke-opacity: 1;
+  stroke-width: 1;
+}
+
+</style>
+
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="https://cdn.rawgit.com/fogfish/monad.js/master/src/monad.js"></script>
+
+<body>
+
+<nav class="navbar navbar-default navbar-fixed-top">
+   <div class="container-fluid">
+      <div class="navbar-header">
+         <a class="navbar-brand" href="#">Hercule</a>
+      </div>
+      <ul class="nav navbar-nav">
+         <li><p id="scenario-id" class="navbar-text"></p></li>
+      </ul>
+
+   </div>
+</nav>
+
+<div class="container">
+   <div class="row">
+      <div class="col-md-4">
+         <div class="datalog">
+            <button type="button" class="btn btn-default btn-xs navbar-btn act-submit">
+               <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Submit
+            </button>
+            <p> 
+               Use @id and rel attributes at query to link visualization: data(@id, rel) :- all(@id, p, rel).
+            </p> 
+            <textarea id="text" class="source-code"></textarea>
+         </div>
+         <div class="content"></div>
+         <div class="history"></div>
+      </div>
+      <div id="graph" class="col-md-8">
+      </div>
+   </div>
+
+</div>
+
+
+<script type="text/javascript">
+var config = {
+   ws: 'ws://localhost:8080'
+}
+
+var model  = {
+   nodes: [],
+   links: [],
+   graph: d3.map(),
+   history: []
+}
+
+//--------------------------------------------------------------------------
+//
+// action
+//
+//--------------------------------------------------------------------------
+var actionUI = (function()
+{
+   var self = {};
+   
+   self.submit = function(accept)
+   {
+      d3.select('.act-submit').on('click',
+         function(_)
+         {
+            var x = d3.select('#text').property('value')
+            if (x.length != 0)
+               accept(x)
+         }
+      )
+   }.curry()
+
+   return self;
+})();
+
+var actionIO = (function()
+{
+   var self = {};
+   var sock = null;
+
+   //
+   self.datalog = function(q, accept)
+   {
+      if (sock != null)
+         sock.close()
+
+      sock = new WebSocket(config.ws + '/datalog/live/hercule');
+      sock.onopen = function(_)
+      {
+         sock.send(q)
+      };
+      sock.onclose   = function(_){
+         accept({eof: true})
+      };
+      sock.onerror   = function(_){};
+      sock.onmessage = function(x) 
+      { 
+         accept(JSON.parse(x.data)); 
+      };
+   }.curry();
+
+
+   return self;
+})();
+
+//--------------------------------------------------------------------------
+//
+// present
+//
+//--------------------------------------------------------------------------
+var present = (function()
+{
+   var self   = {};
+
+   self.history = function(model, datalog)
+   {
+      var json = {id: model.history.length, datalog: datalog}
+      model.history.push(json)
+      return json
+   }.curry();
+
+   return self;
+})();
+
+//--------------------------------------------------------------------------
+//
+// state
+//
+//--------------------------------------------------------------------------
+var state = (function()
+{
+   var self   = {};
+
+   var width  = 2000
+   var height = 1500
+
+   var color = d3.scale.category10();
+   var force  = d3.layout.force()
+      .nodes(model.nodes)
+      .links(model.links)
+      .charge(-90)
+      .linkDistance(20)
+      .on("tick", tick)
+
+
+   self.force = force
+   
+   var svg = d3.select("#graph").append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .append("g")
+         .attr("transform", "translate(" + 20 + "," + 20 + ")")
+
+   var node = svg.selectAll(".node")
+   var link = svg.selectAll(".link")
+
+   function tick() 
+   {
+     node.attr("cx", function(d) { return d.x; })
+         .attr("cy", function(d) { return d.y; })
+
+     link.attr("x1", function(d) { return d.source.x; })
+         .attr("y1", function(d) { return d.source.y; })
+         .attr("x2", function(d) { return d.target.x; })
+         .attr("y2", function(d) { return d.target.y; });
+   }
+
+   function gnode(json) 
+   {
+      var n = model.graph.get(json['@id']);
+      if (n == undefined)
+      {
+         n = {id: model.graph.size(), json: json}
+         model.graph.set(json['@id'], n)
+      }
+      return n
+   }
+
+   self.append = function(model, group, json)
+   {
+      if (!json.eof)
+      {
+         var isA = model.graph.has(json['@id'])
+         var elA = gnode(json)
+
+         var isB = model.graph.has(json['rel'])
+         var elB = gnode({'@id': json['rel']})
+
+         if (!isA) model.nodes.push(elA)
+         if (!isB) model.nodes.push(elB)
+         model.links.push({source: elA, target: elB})
+      } else {
+         link = link.data(force.links(), function(d) { return d.source.id + "-" + d.target.id; });
+         link.enter()
+            .insert("line", ".node")
+               .attr("class", function(d){return "link" + " link" + d.target.id + " link" + d.source.id});
+         link.exit().remove();
+
+         node = node.data(force.nodes(), function(d) {return d.id;});
+         node.enter()
+            .append("circle")
+               .attr("class", function(d) {return "node " + d.id;})
+               .style("fill", function(d){ return color(group); })
+               .attr("r", 5)
+               .on("click", 
+                  function(d){
+                     d3.selectAll('.link' + d.id).classed('selected', !d.selected);
+                     d.selected = !d.selected
+                     d3.select(this).classed('active', d.selected)
+                     self.content(d);
+                     
+                  })
+               .on("mouseover", 
+                  function(d){
+                     d3.selectAll('.link' + d.id).classed('hovered', true);
+                  })
+               .on("mouseout", 
+                  function(d){
+                     d3.selectAll('.link' + d.id).classed('hovered', false);
+                  });
+         node.append("title")
+            .text(function(d) { return d.name; });
+         node.exit().remove();
+
+         force.size([600, 400]).start()
+      }
+
+      return json
+   }.curry() 
+
+
+   self.history = function(model, datalog)
+   {
+      var history = d3.select('.history').selectAll('div')
+         .data([datalog], function(d){return d.id})
+         .enter()
+
+      history.append('hr')
+
+      history.append('div')
+         .classed('source-code', true)
+         .style('color', function(d){return color(d.id)})
+         .text(function(d){return d.datalog})
+      
+     
+
+      return datalog
+   }.curry()
+
+   self.content = function(json)
+   {
+      if (json.selected)
+      {
+         var content = d3.select('.content').selectAll('pre')
+            .data([json], function(d){return d.id})
+            .enter()
+
+         content.append('pre')
+            .attr('id', function(d){return 'content-' + json.id})
+            .classed('source-code', true)
+            .text(function(d){return JSON.stringify(d.json, null, 2)})
+      } else {
+         d3.select('.content').select('#content-' + json.id).remove()
+      }
+
+   }.curry();
+
+   return self;
+})();
+
+
+monad.do([
+   monad.UI(actionUI.submit),
+   present.history(model),
+   state.history(model),
+   function(json)
+   {
+      monad.do([
+         monad.UI(actionIO.datalog(json.datalog)),
+         state.append(model, json.id),
+      ])
+   }
+])
+
+
+
+var dlq = [
+'venue(@id, title, thumbnail) :-',
+'   rel(@id, "dc:relation", "dbr:Esplanadi"),',
+'   s(@id, "dc:title", title),',
+'   rel(@id, "schema:thumbnail", thumbnail).'
+].join(" ")
+
+var a = 'x(id, b, c) :- s(id, b, c).'
+var c = 'x(id, b, c) :- s(id, "dc:relation", c).'
+var b = 'x(id, b, c) :- s(id, b, c), Id = "dbr:Stockmann,_Helsinki_centre".'
+
+
+
+
+</script>
+
+</body>

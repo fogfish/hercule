@@ -1,17 +1,17 @@
 %% @doc
 %%
--module(hercule_q).
+-module(hercule_snap_q).
 
 -export([
    allowed_methods/1,
    content_provided/1, 
    content_accepted/1,
-   'PUT'/3
+   'POST'/3
 ]).
 
 %%
 allowed_methods(_Req) ->
-   ['PUT'].
+   ['POST'].
 
 %%
 content_provided(_Req) ->
@@ -22,7 +22,7 @@ content_accepted(_Req) ->
    [{text, datalog}].
 
 
-'PUT'({application, json}, Datalog, {Url, _Head, Env}) ->
+'POST'({application, json}, Datalog, {Url, _Head, Env}) ->
    Snap = hercule:q(lens:get(lens:pair(<<"ns">>), Env), Datalog),
    case scalar:i( uri:q(<<"n">>, 0, Url) ) of
       0 ->
