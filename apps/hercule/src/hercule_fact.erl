@@ -25,18 +25,23 @@ content_accepted(_Req) ->
 'POST'({application, json}, JsonLD, {_Url, _Head, Env}) ->
    Ns  = lens:get(lens:pair(<<"ns">>), Env),
    Uri = uri:new( opts:val(storage, hercule) ),
-   RDF = lists:flatten(
-      lists:map(
-         fun(X) -> semantic:typed(semantic:jsonld(X)) end,
-         identity(jsonld(JsonLD))
-      )
-   ),
+   RDF = rdf( jsonld(JsonLD) ),
    {ok, Sock} = esio:socket(uri:segments([scalar:s(Ns)], Uri)),
-   ok = elasticnt:in(Sock, RDF),
+   case lens:get(lens:pair(<<"action">>, <<"put">>), Env) of
+      <<"remove">> ->
+         ok = elasticnt:remove(Sock, RDF);
+      _ ->
+         ok = elasticnt:put(Sock, RDF)
+   end,
    esio:close(Sock),
    ok.
 
+%%
+%% decode binary to json-ld
 jsonld(JsonLD) ->
+   assert( decode(JsonLD) ).
+
+decode(JsonLD) ->
    case jsx:decode(JsonLD, [return_maps]) of
       Json when is_list(Json) ->
          Json;
@@ -44,15 +49,18 @@ jsonld(JsonLD) ->
          [Json]
    end.
 
-identity(List) ->
-   lists:map(
-      fun(X) ->
-         case maps:is_key(<<"@id">>, X) of
-            false ->
-               X#{<<"@id">> => bits:btoh(crypto:hash(sha, jsx:encode(X)))};
-            true  ->
-               X
-         end
-      end,
+assert(List) ->
+   lists:filter(
+      fun(X) -> maps:is_key(<<"@id">>, X) end,
       List
+   ).
+
+%%
+%% decode json-ld to nt collections
+rdf(JsonLD) ->
+   lists:flatten(
+      lists:map(
+         fun(X) -> semantic:typed(semantic:jsonld(X)) end,
+         JsonLD
+      )
    ).
