@@ -31,13 +31,13 @@ RUN \
 
 ##
 ## install application
-COPY hercule-${VSN}+${ARCH}.${PLAT}.bundle /tmp/hercule.bundle
+COPY ${APP}-${VSN}+${ARCH}.${PLAT}.bundle /tmp/${APP}.bundle
 
 RUN \
-   sh /tmp/hercule.bundle && \
-   rm /tmp/hercule.bundle 
+   sh /tmp/${APP}.bundle && \
+   rm /tmp/${APP}.bundle 
 
-ENV PATH $PATH:/usr/local/hercule/bin/
+ENV PATH $PATH:/usr/local/${APP}/bin/
 
 EXPOSE 8080
 EXPOSE 4369
