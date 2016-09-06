@@ -222,15 +222,15 @@ var state = (function()
 {
    var self   = {};
 
-   var width  = 1024
-   var height = 800
+   var width  = 2048
+   var height = 1600
 
    var color = d3.scale.category10();
    var force  = d3.layout.force()
       .nodes(model.nodes)
       .links(model.links)
       .charge(-90)
-      .linkDistance(20)
+      .linkDistance(35)
       .size([width, height])
       .on("tick", tick)
 

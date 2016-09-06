@@ -11,6 +11,7 @@
         ,restd
         ,esio
         ,elasticnt
+        ,semantic
       ]},
       {mod, {hercule_app, []}},
       {env, []}
