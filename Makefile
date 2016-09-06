@@ -22,7 +22,7 @@ TEST   ?= ${APP}
 S3     ?=
 VMI    ?= fogfish/erlang
 NET    ?= lo0
-URL 	 ?= undefined
+URL 	 ?= fogfish
 LATEST ?= latest
 
 ## root path to benchmark framework
@@ -136,7 +136,7 @@ docker: rel/Dockerfile
 		--build-arg APP=${APP} \
 		--build-arg VSN=${VSN} \
 		-t ${URL}/${APP}:${VSN} -f $< .
-	docker tag -f ${URL}/${APP}:${VSN} ${URL}/${APP}:${LATEST}
+	docker tag ${URL}/${APP}:${VSN} ${URL}/${APP}:${LATEST}
 
 
 
