@@ -40,7 +40,7 @@ content_accepted(_Req) ->
 
 'POST'({application, json}, JsonLD, {_Url, _Head, Env}) ->
    Ns  = lens:get(lens:pair(<<"ns">>), Env),
-   Uri = uri:new( opts:val(storage, hercule) ),
+   Uri = uri:new( os:getenv("HERCULE_STORAGE", opts:val(storage, hercule)) ),
    RDF = rdf( jsonld(JsonLD) ),
    {ok, Sock} = esio:socket(uri:segments([scalar:s(Ns)], Uri)),
    case lens:get(lens:pair(<<"action">>, <<"put">>), Env) of

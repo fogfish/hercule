@@ -17,6 +17,8 @@
 {release, [
    hercule,
 
+   crypto,
+
    %% 
    %% unresolved dependencies due to bugs in libraries 
    %% @todo: raise issue to dependencies

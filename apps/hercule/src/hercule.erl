@@ -34,7 +34,8 @@ q(Ns, Datalog) ->
 
 q(Ns, Heap, Datalog)
  when is_function(Datalog) ->
-   Uri = uri:new( opts:val(storage, hercule) ),
+   %% todo: config re-write
+   Uri = uri:new( os:getenv("HERCULE_STORAGE", opts:val(storage, hercule)) ),
    {ok, Sock} = esio:socket(uri:segments([scalar:s(Ns)], Uri)),
    datalog:q(Datalog, Heap, Sock);
 

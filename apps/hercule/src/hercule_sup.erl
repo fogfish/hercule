@@ -38,6 +38,8 @@ init([]) ->
    {ok,
       {
          {one_for_one, 4, 1800},
-         []
+         [
+            ?CHILD(worker, hercule_config)
+         ]
       }
    }.

@@ -37,39 +37,7 @@ stop(_State) ->
 %%
 %%
 config() ->
-   datalog_db(),
-   config_ns_schema( opts:val(ns, hercule) ),
-   config_ns_schema( opts_env() ).
-
-
-%%
-%%
-config_ns_schema(List) ->
-   {ok, Schema} = esio:socket( storage() ),
-   lists:foreach(
-      fun(X) ->
-         elasticnt:schema(Schema, X, [])
-      end,
-      List
-   ),
-   esio:close(Schema).
-
-
-%%
-%%
-storage() ->
-   os:getenv("HERCULE_STORAGE", opts:val(storage, hercule)).
-
-%%
-%%
-opts_env() ->
-   N = scalar:i( os:getenv("HERCULE_NS", 0) ),
-   lists:map(
-      fun(X) ->
-          os:getenv("HERCULE_NS_" ++ scalar:c(X))
-      end,
-      lists:seq(1, N)
-   ).
+   datalog_db().
 
 %%
 %% create local storage for datalog statements
