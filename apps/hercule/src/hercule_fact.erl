@@ -38,10 +38,11 @@ content_accepted(_Req) ->
    [{application, json}].
 
 
-'POST'({application, json}, JsonLD, {_Url, _Head, Env}) ->
+'POST'({application, json}, Json, {_Url, _Head, Env}) ->
    Ns  = lens:get(lens:pair(<<"ns">>), Env),
    Uri = uri:new( os:getenv("HERCULE_STORAGE", opts:val(storage, hercule)) ),
-   RDF = rdf( jsonld(JsonLD) ),
+   JsonLD = jsonld(Json),
+   RDF = rdf(JsonLD),
    {ok, Sock} = esio:socket(uri:segments([scalar:s(Ns)], Uri)),
    case lens:get(lens:pair(<<"action">>, <<"put">>), Env) of
       <<"remove">> ->
@@ -50,7 +51,7 @@ content_accepted(_Req) ->
          ok = elasticnt:put(Sock, RDF)
    end,
    esio:close(Sock),
-   {ok, JsonLD}.
+   {ok, jsx:encode( lists:usort([maps:get(<<"@id">>, X) || X <- JsonLD]) )}.
 
 %%
 %% decode binary to json-ld
@@ -58,12 +59,14 @@ jsonld(JsonLD) ->
    assert( decode(JsonLD) ).
 
 decode(JsonLD) ->
-   case jsx:decode(JsonLD, [return_maps]) of
-      Json when is_list(Json) ->
-         Json;
-      Json ->
-         [Json]
-   end.
+   jsx:decode(JsonLD, [return_maps]).
+
+assert(#{<<"@id">> := _} = Json) ->
+   [Json];
+
+assert(#{} = Json) ->
+   Urn = <<"urn:uid:", (bits:btoh( uid:encode( uid:g() ) ))/binary>>,
+   [Json#{<<"@id">> => Urn}];
 
 assert(List) ->
    lists:filter(
@@ -72,7 +75,7 @@ assert(List) ->
    ).
 
 %%
-%% decode json-ld to nt collections
+%% decode json-ld to type-safe knowledge facts
 rdf(JsonLD) ->
    lists:flatten(
       lists:map(
