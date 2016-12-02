@@ -71,7 +71,7 @@ assert(#{<<"@id">> := _} = Json) ->
    [Json];
 
 assert(#{} = Json) ->
-   Urn = <<"urn:uid:", (bits:btoh( uid:encode( uid:g() ) ))/binary>>,
+   Urn = <<"_:uid:", (bits:btoh( uid:encode( uid:g() ) ))/binary>>,
    [Json#{<<"@id">> => Urn}];
 
 assert(List) ->
