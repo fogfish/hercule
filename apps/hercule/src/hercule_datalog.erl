@@ -50,10 +50,4 @@ content_accepted(_Req) ->
    [{_, _, Datalog}] = ets:lookup(hercule, Id),   
    {ok, Datalog}.
 
-
-% %%
-% %%
-% 'POST'(_Type, Datalog, {_Url, _Head, Env}) ->
-%    Ns = lens:get(lens:pair(<<"ns">>), Env),
-%    {200, jsx:encode( stream:list( hercule:q(Ns, Datalog) ) )}.
    

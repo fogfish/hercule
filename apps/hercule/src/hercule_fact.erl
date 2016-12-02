@@ -22,12 +22,13 @@
    allowed_methods/1,
    content_provided/1, 
    content_accepted/1,
-   'POST'/3
+   'POST'/3,
+   'OPTIONS'/3
 ]).
 
 %%
 allowed_methods(_Req) ->
-   ['POST'].
+   ['OPTIONS', 'POST'].
 
 %%
 content_provided(_Req) ->
@@ -37,18 +38,23 @@ content_provided(_Req) ->
 content_accepted(_Req) ->
    [{application, json}].
 
+%%
+'OPTIONS'({application, json}, _, {_Url, Head, _Env}) ->
+   ok.
 
-'POST'({application, json}, Json, {_Url, _Head, Env}) ->
+%%
+'POST'({application, json}, Json, {_Url, Head, Env}) ->
    Ns  = lens:get(lens:pair(<<"ns">>), Env),
+   Unique = lens:get(lens:pair(<<"unique">>, spo), Env),
    Uri = uri:new( os:getenv("HERCULE_STORAGE", opts:val(storage, hercule)) ),
    JsonLD = jsonld(Json),
    RDF = rdf(JsonLD),
    {ok, Sock} = esio:socket(uri:segments([scalar:s(Ns)], Uri)),
    case lens:get(lens:pair(<<"action">>, <<"put">>), Env) of
       <<"remove">> ->
-         ok = elasticnt:remove(Sock, RDF);
+         ok = elasticnt:remove(Sock, RDF, [{unique, scalar:atom(Unique)}]);
       _ ->
-         ok = elasticnt:put(Sock, RDF)
+         ok = elasticnt:put(Sock, RDF, [{unique, scalar:atom(Unique)}])
    end,
    esio:close(Sock),
    {ok, jsx:encode( lists:usort([maps:get(<<"@id">>, X) || X <- JsonLD]) )}.
