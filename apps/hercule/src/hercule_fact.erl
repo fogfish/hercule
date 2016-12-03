@@ -39,13 +39,13 @@ content_accepted(_Req) ->
    [{application, json}].
 
 %%
-'OPTIONS'({application, json}, _, {_Url, Head, _Env}) ->
+'OPTIONS'({application, json}, _, {_Url, _Head, _Env}) ->
    ok.
 
 %%
-'POST'({application, json}, Json, {_Url, Head, Env}) ->
+'POST'({application, json}, Json, {Url, _Head, Env}) ->
    Ns  = lens:get(lens:pair(<<"ns">>), Env),
-   Unique = lens:get(lens:pair(<<"unique">>, spo), Env),
+   Unique = uri:q(<<"unique">>, spo, Url),
    Uri = uri:new( os:getenv("HERCULE_STORAGE", opts:val(storage, hercule)) ),
    JsonLD = jsonld(Json),
    RDF = rdf(JsonLD),
