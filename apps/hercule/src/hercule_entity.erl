@@ -34,7 +34,10 @@ content_provided(_Req) ->
 
 %%
 'GET'({application, json}, _, {_Url, _Head, Env}) ->
-   [{_, Fn, _}] = ets:lookup(hercule, lens:get(lens:pair(<<"id">>), Env)),
+   Ns   = lens:get(lens:pair(<<"ns">>), Env),
    Urn  = lens:get(lens:pair(<<"urn">>), Env),
-   Snap = hercule:q(lens:get(lens:pair(<<"ns">>), Env), #{urn => Urn}, Fn),
+   Req  = elasticlog:horn([s, p, o, c, k], [
+      #{'@' => any , '_' => [s, p, o, c, k]}
+   ]),
+   Snap = hercule:q(Ns, #{s => Urn}, Req),
    {ok, jsx:encode( stream:list(Snap) )}.

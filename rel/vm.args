@@ -13,7 +13,9 @@
 ## Enable kernel poll and a few async threads
 +K true
 +A 160
-+P 10000000
+
+## disable due to OOM at t2.micro
+## +P 10000000
 
 ## vm config for high throughput
 -sbt true
