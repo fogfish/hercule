@@ -39,7 +39,22 @@ init([]) ->
       {
          {one_for_one, 4, 1800},
          [
-            ?CHILD(worker, hercule_config)
+            ?CHILD(worker, hercule_poirot),
+            restapi()
          ]
       }
    }.
+
+%%
+%%
+restapi() ->
+   restd:spec(
+      hercule_restapi:endpoints(), 
+      [
+         {port, opts:val(port, "http://*:8080", hercule)}, 
+         {backlog, 1024},
+         {sndbuf,  64 * 1024 * 1024},
+         {recbuf, 256 * 1024 * 1024},
+         {queue,   10 * 1024}
+      ]
+   ).

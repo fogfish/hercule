@@ -41,7 +41,7 @@ EFLAGS = \
 	-kernel inet_dist_listen_min 32100 \
 	-kernel inet_dist_listen_max 32199 \
 	+P 1000000 \
-	+K true +A 160 -sbt ts
+	+K true +A 160 -sbt u
 
 ## self-extracting bundle wrapper
 BUNDLE_INIT = PREFIX=${PREFIX}\nREL=${PREFIX}/${REL}\nAPP=${APP}\nVSN=${VSN}\nLINE=`grep -a -n "BUNDLE:$$" $$0`\nmkdir -p $${REL}\ntail -n +$$(( $${LINE%%%%:*} + 1)) $$0 | gzip -vdc - | tar -C $${REL} -xvf - > /dev/null\n

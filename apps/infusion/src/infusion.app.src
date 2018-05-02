@@ -1,19 +1,18 @@
-{application, hercule,
+{application, infusion,
    [
-      {description, "knowledge deduction application"},
+      {description, "knowledge infusion"},
       {vsn,         "0.2.0"},
       {modules,     []},
       {registered,  []},
       {applications,[
          kernel,
          stdlib,
-         lager,
-         restd,
+         esq,
          elasticlog,
          clue,
-         infusion
+         pts
       ]},
-      {mod, {hercule_app, []}},
+      {mod, {infusion_app, []}},
       {env, []}
    ]
 }.  

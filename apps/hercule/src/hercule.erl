@@ -17,12 +17,30 @@
 -module(hercule).
 
 -export([start/0]).
--export([q/2,q/3]).
+-export([
+   append/2,
+   q/2,
+   q/3
+]).
 
 start() ->
    applib:boot(?MODULE, 
-      code:where_is_file("dev.config")
+      code:where_is_file("sys.config")
    ).
+
+
+%%
+%%
+% -spec append(_) -> ok.
+
+append(Stream, Fact) ->
+   clue:inc({hercule, intake}),
+   infusion:append(Stream, Fact),
+   % io:format("==> ~p~n", [Fact]),
+   undefined.
+
+
+
 
 %%
 %% evaluates datalog query and return stream
