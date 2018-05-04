@@ -1,5 +1,5 @@
 import React from 'react'
-import { Page, Container, Row, Column } from 'react-dress-code'
+import { Page, Container } from 'react-dress-code'
 import Header from './Header'
 import {withRouter} from 'react-router-dom'
 import './Layout.css'

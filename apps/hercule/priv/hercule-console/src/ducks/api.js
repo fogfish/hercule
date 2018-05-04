@@ -1,9 +1,43 @@
 
+//
+//
 export const SCHEMA = "@@api/schema"
 export const METADATA = "@@api/metadata"
 export const KNOWLEDGE = "@@api/knowledge"
 export const DATALOG = "@@api/datalog"
 export const HISTORY = "@@api/history"
+export const BUCKET = "@@api/bucket"
+export const ENTITY = "@@api/entity"
+
+const empty = {
+  bucket: "nt",
+  schema: [],
+  keys: [],
+  knowledge: [],
+  datalog: "",
+  history: [],
+  entity: undefined
+}
+
+export default (state = empty, action) => {
+  switch (action.type) {
+    case SCHEMA:
+      return { ...state, schema: action.schema }
+    case KNOWLEDGE:
+      return { ...state, keys: action.keys, knowledge: action.knowledge }
+    case DATALOG:
+      return { ...state, datalog: action.query }
+    case HISTORY:
+      return { ...state, history: state.history.concat([action.query]) }
+    case BUCKET:
+      return { ...state, bucket: action.bucket }
+    case ENTITY:
+      return { ...state, entity: action.entity }
+    default:
+      return { ...state }
+  }
+}
+
 
 
 const jsonify = async (http) => {
@@ -17,15 +51,15 @@ const pubRead = url => (
     }).then(jsonify)
   )
 
-const pubSend = (url, body) => (
-    fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body)
-    }).then(jsonify)
-  )
+// const pubSend = (url, body) => (
+//     fetch(url, {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify(body)
+//     }).then(jsonify)
+//   )
 
 const datalog = (url, datalog) => (
     fetch(url, {
@@ -40,17 +74,31 @@ const datalog = (url, datalog) => (
 
 export const fetchSchema = () =>
    async (dispatch, getState) => {
-      const schema = await pubRead("http://localhost:8080/_sys/schema")
+      const bucket = getState().api.bucket
+      const schema = await pubRead(`http://localhost:8080/buckets/${bucket}`)
       dispatch({type: SCHEMA, schema})
    }
 
 export const fetchKnowledge = () =>
   async (dispatch, getState) => {
+    const bucket = getState().api.bucket
     const query = getState().api.datalog
-    const knowledge = await datalog("http://localhost:8080/deduct", query)
-    dispatch({type: METADATA, keys: Object.keys(knowledge[0])})
-    dispatch({type: KNOWLEDGE, knowledge})
-    dispatch({type: HISTORY, query})
+    const knowledge = await datalog(`http://localhost:8080/buckets/${bucket}/deduct`, query)
+    if (knowledge.length > 0)
+    {
+      const keys = Object.keys(knowledge[0])
+      dispatch({type: KNOWLEDGE, keys, knowledge})
+      dispatch({type: HISTORY, query})
+    } else {
+      alert('Not found!')
+    }
+  }
+
+export const fetchEntity = (id) =>
+  async (dispatch, getState) => {
+      const bucket = getState().api.bucket
+      const entity = await pubRead(`http://localhost:8080/buckets/${bucket}/keys/${id}`)
+      dispatch({type: ENTITY, entity})    
   }
 
 export const setDatalog = (query) =>
@@ -58,30 +106,7 @@ export const setDatalog = (query) =>
     dispatch({type: DATALOG, query})
   }
 
-
-//
-//
-const empty = {
-   schema: [],
-   keys: [],
-   knowledge: [],
-   datalog: "",
-   history: []
-}
-
-export default (state = empty, action) => {
-  switch (action.type) {
-    case SCHEMA:
-      return { ...state, schema: action.schema }
-    case METADATA:
-      return { ...state, keys: action.keys }
-    case KNOWLEDGE:
-      return { ...state, knowledge: action.knowledge }
-    case DATALOG:
-      return { ...state, datalog: action.query }
-    case HISTORY:
-      return { ...state, history: state.history.concat([action.query]) }
-    default:
-      return { ...state }
+export const setBucket = (bucket) =>
+  (dispatch, getState) => {
+    dispatch({type: BUCKET, bucket})
   }
-}

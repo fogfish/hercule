@@ -8,14 +8,13 @@
 endpoints() ->
    [
       cors(),
-      % connect(),
       bucket(),
       schema(),
-
       stream(),
       commit(),
-
-      deduct()
+      deduct(),
+      entity(),
+      fact()
    ].
 
 cors() ->
@@ -46,13 +45,14 @@ bucket() ->
            _ /= restd:accesslog(Http)
    ].
 
+%%
+%%
 schema() ->
    [reader ||
         Path /= restd:path("/buckets/:id"),
       Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
            _ /= restd:method('GET'),
            _ /= restd:provided_content({application, json}),
-
       Head /= restd:cors(),
 
       cats:unit( hercule_bucket:schema(Bucket) ),
@@ -87,45 +87,56 @@ commit() ->
       _ /= restd:accesslog(Http)
    ].
 
-
-
-
-
-
-
-connect() ->
-   [reader ||
-      _ /= restd:url("/_sys/connect"),
-      _ /= restd:method('POST'),
-      _ /= restd:accepted_content({application, json}),
-      _ /= restd:provided_content({application, json}),
-      Server /= restd:as_json(),
-
-      hercule_poirot:schema(),
-
-      Http /= restd:to_json(_),
-      _ /= restd:accesslog(Http)
-   ].
-
-
+%%
+%%
 deduct() ->
    [reader ||
-      _ /= restd:url("/deduct"),
-      _ /= restd:method('POST'),
-      _ /= restd:accepted_content({text, plain}),
-      _ /= restd:provided_content({application, json}),
+      Path   /= restd:path("/buckets/:id/deduct"),
+      Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
+           _ /= restd:method('POST'),
+           _ /= restd:accepted_content({text, plain}),
+           _ /= restd:provided_content({application, json}),
       Datalog /= restd:as_text(),
       Head /= restd:cors(),
 
-      cats:unit( hercule_poirot:deduct(Datalog) ),
+      cats:unit( hercule:deduct(Bucket, Datalog) ),
 
       Http /= restd:to_json(Head, _),
       _ /= restd:accesslog(Http)
    ].
 
+%%
+%%
+entity() ->
+   [reader ||
+      Path   /= restd:path("/buckets/:id/keys/:key"),
+      Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
+         Key /= cats:optionT({badkey, key}, lens:get(lens:pair(<<"key">>), Path)),
+           _ /= restd:method('GET'),
+           _ /= restd:provided_content({application, json}),
+      Head /= restd:cors(),
 
+      cats:unit( hercule:entity(Bucket, Key) ),
 
+      Http /= restd:to_json(Head, _),
+      _ /= restd:accesslog(Http)
+   ].
 
+%%
+%%
+fact() ->
+   [reader ||
+      Path   /= restd:path("/buckets/:id/facts"),
+      Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
+           _ /= restd:method('POST'),
+           _ /= restd:accepted_content({application, json}),
+           _ /= restd:provided_content({application, json}),
+        Fact /= restd:as_json(),
 
+      cats:unit( hercule:fact(Bucket, Fact) ),
+
+      Http /= restd:to_json(_),
+      _ /= restd:accesslog(Http)
+   ].
 
 

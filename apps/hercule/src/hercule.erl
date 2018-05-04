@@ -15,12 +15,13 @@
 %%   limitations under the License.
 %%
 -module(hercule).
+-compile({parse_transform, category}).
 
 -export([start/0]).
 -export([
-   append/2,
-   q/2,
-   q/3
+   deduct/2,
+   entity/2,
+   fact/2
 ]).
 
 start() ->
@@ -28,35 +29,48 @@ start() ->
       code:where_is_file("sys.config")
    ).
 
+%%
+%%
+deduct(Bucket, Datalog) ->
+   pts:call(hercule, Bucket, {deduct, Datalog}, infinity).
 
 %%
 %%
-% -spec append(_) -> ok.
-
-append(Stream, Fact) ->
-   clue:inc({hercule, intake}),
-   infusion:append(Stream, Fact),
-   % io:format("==> ~p~n", [Fact]),
-   undefined.
-
-
-
+entity(Bucket, Key) ->
+   pts:call(hercule, Bucket, {entity, Key}, infinity).
 
 %%
-%% evaluates datalog query and return stream
--spec q(_, _) -> datum:stream().
--spec q(_, _, _) -> datum:stream().
+%% {
+%%    "@id": "subject"
+%%    "predicate": {"@value": "object", "@type": "type"}  
+%% }
+fact(Bucket, #{<<"@id">> := _} = JsonLD) ->
+   [either ||
+      cats:unit( jsonld_to_facts(JsonLD) ),
+      cats:unit( [patch(Bucket, X) || X <- _] ),
+      cats:sequence(_)
+   ];
 
-q(Ns, Datalog) ->
-   q(Ns, #{}, Datalog).
+fact(Bucket, #{<<"s">> := S, <<"p">> := P, <<"o">> := O, <<"type">> := Type}) ->
+   patch(Bucket, encode(S, P, O, Type)).
 
-q(Ns, Heap, Datalog)
- when is_function(Datalog) ->
-   %% todo: config re-write
-   Uri = uri:new( os:getenv("HERCULE_STORAGE", opts:val(storage, hercule)) ),
-   %% @todo: esio socket pool
-   {ok, Sock} = esio:socket(uri:segments([scalar:s(Ns)], Uri)),
-   datalog:q(Datalog, Heap, Sock);
+jsonld_to_facts(#{<<"@id">> := S} = JsonLD) ->
+   [encode(S, P, O, Type) ||
+      {P, #{<<"@value">> := O, <<"@type">> := Type}} <- maps:to_list(JsonLD),
+      P =/= <<"@id">>
+   ].
 
-q(Ns, Heap, Datalog) ->
-   q(Ns, Heap, elasticlog:c(scalar:c(Datalog))).
+patch(Bucket, Fact) -> 
+   pts:call(hercule, Bucket, {fact, Fact}, infinity).
+
+%%
+%%
+encode(S, P, O, Type) ->
+   #{
+      s    => semantic:compact(S), 
+      p    => semantic:compact(P), 
+      o    => O, 
+      type => semantic:compact(Type)
+   }.
+
+

@@ -25,7 +25,6 @@
 %%
 %%
 start(_Type, _Args) ->
-   config(),
    clue:log(clue:define(counter, {hercule, intake})),
    hercule_sup:start_link(). 
 
@@ -33,15 +32,4 @@ start(_Type, _Args) ->
 %%
 stop(_State) ->
    ok.
-
-
-%%
-%%
-config() ->
-   datalog_db().
-
-%%
-%% create local storage for datalog statements
-datalog_db() ->
-   ets:new(hercule, [set, public, named_table]).
 

@@ -2,8 +2,7 @@ import React from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { lifecycle } from 'recompose'
-import { Row, Column, Card, Label } from 'react-dress-code'
-import { Table, THead, TBody, TR, TH, TD, Button } from 'react-dress-code'
+import { Table, THead, TBody, TR, TH, TD } from 'react-dress-code'
 
 import { fetchSchema } from '../../ducks/api'
 
@@ -17,7 +16,9 @@ const Schema = ({schema}) => (
     </TR>
   </THead>
   <TBody>
-    {schema.map((x) => <TR interactive tight><TD>{x.key}</TD><TD>{x.type}</TD></TR>)}
+    {Object.keys(schema).map(
+      (key, i) => <TR key={i} interactive tight><TD>{key}</TD><TD>{schema[key]}</TD></TR>
+    )}
   </TBody>
   </Table>
 )

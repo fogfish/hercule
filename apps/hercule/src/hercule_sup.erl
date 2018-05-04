@@ -39,7 +39,7 @@ init([]) ->
       {
          {one_for_one, 4, 1800},
          [
-            ?CHILD(worker, hercule_poirot),
+            ?CHILD(supervisor, pts, knowledge()),
             restapi()
          ]
       }
@@ -58,3 +58,18 @@ restapi() ->
          {queue,   10 * 1024}
       ]
    ).
+
+%%
+%%
+knowledge() ->
+   [
+      hercule,
+      [
+         'read-through',
+         {keylen,    inf},
+         {entity,    hercule_knowledge},
+         {factory,   temporary}
+      ]
+   ].
+
+

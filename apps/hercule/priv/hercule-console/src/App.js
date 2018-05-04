@@ -10,6 +10,7 @@ import { Layout } from './components/Layout'
 import { VisualLog } from './components/VisualLog'
 import { HistoryLog } from './components/HistoryLog'
 import { Knowledge } from './components/Knowledge'
+import { Entity } from './components/Entity'
 
 const App = () => (
   <div>
@@ -17,6 +18,7 @@ const App = () => (
       <Layout>
         <Route exact path="/" component={VisualLog} />
         <Route exact path="/history" component={HistoryLog} />
+        <Route exact path="/entity/:id" component={Entity} />
         <Route path="/" component={Knowledge} />
       </Layout>
     </Router>

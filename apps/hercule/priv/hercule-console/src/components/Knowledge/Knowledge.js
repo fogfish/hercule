@@ -1,8 +1,18 @@
 import React from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { lifecycle } from 'recompose'
 import { Row, Column, Card, Table, THead, TBody, TR, TH, TD, Button } from 'react-dress-code'
+import Expandable from './Expandable'
+import { Link } from 'react-router-dom'
+
+
+const Value = ({schema, data}) => (
+  Array.isArray(data) && data.length > 1 
+    ? <Expandable list={data} /> 
+    : schema.startsWith('@')
+    ? <TD><Link to={`/entity/${data}`}>{data}</Link></TD>
+    : <TD>{data}</TD>
+)
 
 const Knowledge = ({keys, knowledge}) => (
   <Row>
@@ -12,14 +22,14 @@ const Knowledge = ({keys, knowledge}) => (
         <Table>
           <THead>
             <TR>
-              {keys.map((x) => <TH>{x}</TH>)}
+              {keys.map((x, i) => <TH key={i}>{x}</TH>)}
             </TR>
           </THead>
           <TBody>
             {knowledge.map(
-              (k) => 
-                <TR>
-                  {keys.map((x) => <TD>{k[x]}</TD>)}
+              (k, i) => 
+                <TR key={i}>
+                  {keys.map((x, j) => <Value key={j} schema={x} data={k[x]} />)}
                 </TR>
             )}
           </TBody>

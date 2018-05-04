@@ -11,6 +11,7 @@
          restd,
          elasticlog,
          clue,
+         pts,
          infusion
       ]},
       {mod, {hercule_app, []}},

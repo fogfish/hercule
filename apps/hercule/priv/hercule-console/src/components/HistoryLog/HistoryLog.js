@@ -1,7 +1,7 @@
 import React from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { Row, Column, Card, Label, Button, Divider } from 'react-dress-code'
+import { Row, Column, Card, Label, Divider } from 'react-dress-code'
 
 
 const HistoryLog = ({history}) => (
@@ -11,7 +11,7 @@ const HistoryLog = ({history}) => (
       <Card>
         <Label>History</Label>
         {history.map(
-            (x) => <div><pre className="dc--text-small">{x}</pre><Divider secondary/></div>
+            (x, i) => <div key={i}><pre className="dc--text-small">{x}</pre><Divider secondary/></div>
          )}
       </Card>
       }

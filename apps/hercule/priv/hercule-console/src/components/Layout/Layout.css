@@ -25,3 +25,8 @@ a
    color: #26aafe;
    text-decoration: none;
 }
+
+input
+{
+   margin-left: 1em;
+}

@@ -1,7 +1,7 @@
 import React from 'react'
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
-import { Row, Column, Card, Label, SideRevealer, Button, Tab, TabElement } from 'react-dress-code'
+import { Row, Column, Card, Label, SideRevealer, Button } from 'react-dress-code'
 import Schema from './Schema'
 import { fetchKnowledge, setDatalog } from '../../ducks/api'
 
