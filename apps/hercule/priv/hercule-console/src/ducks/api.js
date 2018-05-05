@@ -75,7 +75,7 @@ const datalog = (url, datalog) => (
 export const fetchSchema = () =>
    async (dispatch, getState) => {
       const bucket = getState().api.bucket
-      const schema = await pubRead(`http://localhost:8080/buckets/${bucket}`)
+      const schema = await pubRead(`/buckets/${bucket}`)
       dispatch({type: SCHEMA, schema})
    }
 
@@ -83,7 +83,7 @@ export const fetchKnowledge = () =>
   async (dispatch, getState) => {
     const bucket = getState().api.bucket
     const query = getState().api.datalog
-    const knowledge = await datalog(`http://localhost:8080/buckets/${bucket}/deduct`, query)
+    const knowledge = await datalog(`/buckets/${bucket}/deduct`, query)
     if (knowledge.length > 0)
     {
       const keys = Object.keys(knowledge[0])
@@ -97,7 +97,7 @@ export const fetchKnowledge = () =>
 export const fetchEntity = (id) =>
   async (dispatch, getState) => {
       const bucket = getState().api.bucket
-      const entity = await pubRead(`http://localhost:8080/buckets/${bucket}/keys/${id}`)
+      const entity = await pubRead(`/buckets/${bucket}/keys/${id}`)
       dispatch({type: ENTITY, entity})    
   }
 

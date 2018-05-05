@@ -14,7 +14,8 @@ endpoints() ->
       commit(),
       deduct(),
       entity(),
-      fact()
+      fact(),
+      restd_static:react("/console", hercule, 'hercule-console')
    ].
 
 cors() ->

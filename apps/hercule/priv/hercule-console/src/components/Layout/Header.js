@@ -12,8 +12,8 @@ const Header = ({location, api, setBucket}) => (
     <TabElement header>
       <i className="fa fa-cloud" aria-hidden="true"></i> Console
     </TabElement>
-    <TabElement active={location.pathname === "/"}><Link to="/">Datalog</Link></TabElement>
-    <TabElement active={location.pathname === "/history"}><Link to="/history">History</Link></TabElement>
+    <TabElement active={location.pathname === "/console"}><Link to="/console">Datalog</Link></TabElement>
+    <TabElement active={location.pathname === "/console/history"}><Link to="/console/history">History</Link></TabElement>
 
 
     <TabElement right>

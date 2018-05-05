@@ -40,9 +40,10 @@ const EntityWithData = lifecycle({
     this.props.fetchEntity(id)
   },
 
-  componentWillReceiveProps() {
-    const id = this.props.match.params.id 
-    this.props.fetchEntity(id)    
+  componentWillReceiveProps(props) {
+    const id = props.match.params.id
+    if (props.entity.s !== id)
+      this.props.fetchEntity(id)
   }
 })(Entity)
 

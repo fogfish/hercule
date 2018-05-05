@@ -9,9 +9,7 @@
 deps.config
 _build/
 rebar3
-rebar.lock
 log/
-.eunit/
 *.bundle
 *.sublime-*
 tests/

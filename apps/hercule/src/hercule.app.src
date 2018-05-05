@@ -8,6 +8,7 @@
          kernel,
          stdlib,
          lager,
+         htcodec,
          restd,
          elasticlog,
          clue,

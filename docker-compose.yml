@@ -1,0 +1,36 @@
+##
+## @doc
+##   docker compose file to spawn Erlang releases using 
+##
+##      make dist-up 
+##
+## @version 1.0.1
+version: '3'
+
+services:
+  hercule:
+    build:
+      context: .
+      dockerfile: _build/spawner
+
+    hostname: localhost
+    domainname: localdomain
+
+    depends_on:
+      - elastic
+
+    ports:
+      - "8080:8080"
+
+    volumes:
+      - "/tmp/hercule:/var/lib/hercule"
+
+    environment:
+      HERCULE_STORAGE: http://elastic:9200
+      HERCULE_STREAMFS: /var/lib/hercule
+
+  elastic:
+    image: fogfish/elasticsearch:6.2.3
+
+    ports:
+      - 9200:9200

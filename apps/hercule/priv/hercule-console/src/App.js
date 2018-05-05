@@ -16,9 +16,9 @@ const App = () => (
   <div>
     <Router>
       <Layout>
-        <Route exact path="/" component={VisualLog} />
-        <Route exact path="/history" component={HistoryLog} />
-        <Route exact path="/entity/:id" component={Entity} />
+        <Route exact path="/console" component={VisualLog} />
+        <Route exact path="/console/history" component={HistoryLog} />
+        <Route exact path="/console/entity/:id" component={Entity} />
         <Route path="/" component={Knowledge} />
       </Layout>
     </Router>

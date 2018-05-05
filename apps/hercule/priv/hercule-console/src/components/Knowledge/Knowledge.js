@@ -10,7 +10,7 @@ const Value = ({schema, data}) => (
   Array.isArray(data) && data.length > 1 
     ? <Expandable list={data} /> 
     : schema.startsWith('@')
-    ? <TD><Link to={`/entity/${data}`}>{data}</Link></TD>
+    ? <TD><Link to={`/console/entity/${data}`}>{data}</Link></TD>
     : <TD>{data}</TD>
 )
 
