@@ -75,13 +75,13 @@ commit(Queue, Bucket) ->
    {ok, Sock} = esio:socket(Uri, []),
    stream:foreach(
       fun(Fact) -> 
-         {ok, _} = elasticlog:append(Sock, Fact) 
+         case elasticlog:append(Sock, Fact) of
+            {ok, _} ->
+               ok;
+            {error, Reason} ->
+               lager:error("~p", [Reason])
+         end
       end, 
       facts( stream(Queue) )
    ).
-
-
-
-
-
 

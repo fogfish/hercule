@@ -27,7 +27,7 @@ services:
 
     environment:
       HERCULE_STORAGE: http://elastic:9200
-      HERCULE_STREAMFS: /var/lib/hercule
+      HERCULE_STREAM_FS: /var/lib/hercule
 
   elastic:
     image: fogfish/elasticsearch:6.2.3

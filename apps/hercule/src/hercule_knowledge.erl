@@ -37,7 +37,8 @@ free(_, #state{sock = Sock}) ->
 deduct({deduct, Datalog}, Pipe, #state{sock = Sock} = State) ->
    try
       Query = elasticlog:c( elasticlog:p( scalar:c( erlang:iolist_to_binary(Datalog) ) ) ),
-      List  = stream:list(100, datalog:q(Query, Sock) ),
+      %% @todo: limit from api
+      List  = stream:list(10, datalog:q(Query, Sock) ),
       Json  = [encode(X) || X <- List],
       pipe:ack(Pipe, {ok, Json})
    catch _:{case_clause, _Reason} ->
