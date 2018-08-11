@@ -49,7 +49,8 @@ init([]) ->
 %%
 restapi() ->
    restd:spec(
-      hercule_restapi:endpoints(), 
+      hercule_restapi:endpoints(),
+      hercule_restapi:filters(),
       [
          {port, opts:val(port, "http://*:8080", hercule)}, 
          {backlog, 1024},

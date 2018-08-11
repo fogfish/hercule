@@ -1,65 +1,115 @@
 -module(hercule_restapi).
 -compile({parse_transform, category}).
 
--export([endpoints/0]).
+-export([filters/0, endpoints/0]).
+
+%%
+%%
+filters() ->
+   [
+      restd:cors(),
+      restd:compress(),
+      restd:accesslog()
+   ].
 
 %%
 %%
 endpoints() ->
    [
-      cors(),
+      restd:preflight(),
+      deduct(),
+      entity(),
+      knowledge(),
+
+
+
       bucket(),
       schema(),
       stream(),
       commit(),
-      deduct(),
-      entity(),
       fact(),
       restd_static:react("/console", hercule, 'hercule-console')
    ].
 
-cors() ->
+
+%%-----------------------------------------------------------------------------
+%%
+%% lookup interface
+%%
+%%-----------------------------------------------------------------------------
+
+%%
+%%
+deduct() ->
    [reader ||
-         _ /= restd:method('OPTIONS'),
-      Head /= restd:cors([
-         {<<"Access-Control-Allow-Methods">>, <<"GET, PUT, POST, DELETE, OPTIONS">>}
-        ,{<<"Access-Control-Allow-Headers">>, <<"Content-Type, Authorization, Accept">>}
-        ,{<<"Access-Control-Max-Age">>,       600}
-      ]),
-         _ /= restd:to_text(200, Head, <<" ">>)
+      Path   /= restd:path("/buckets/:id/deduct"),
+      Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
+           _ /= restd:method('POST'),
+           _ /= restd:accepted_content({text, plain}),
+           _ /= restd:provided_content({application, json}),
+        Opts /= restd:q(),
+      Script /= restd:as_text(),
+
+      cats:unit( 
+         hercule:deduct(
+            Bucket,
+            scalar:i(lens:get(lens:pair(<<"limit">>, 100), Opts)),
+            Script
+         )
+      ),
+      _ /= restd:to_json(_)
    ].
 
-
 %%
 %%
-bucket() ->
+entity() ->
    [reader ||
-      Path   /= restd:path("/buckets/:id"),
+      Path   /= restd:path("/buckets/:id/keys/:key"),
       Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
-           _ /= restd:method('PUT'),
-           _ /= restd:accepted_content({application, json}),   
-      Schema /= restd:as_json(),
-
-      cats:unit(hercule_bucket:create(Bucket, Schema)),
-
-      Http   /= restd:to_json(_),
-           _ /= restd:accesslog(Http)
-   ].
-
-%%
-%%
-schema() ->
-   [reader ||
-        Path /= restd:path("/buckets/:id"),
-      Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
+         Key /= cats:optionT({badkey, key}, lens:get(lens:pair(<<"key">>), Path)),
            _ /= restd:method('GET'),
            _ /= restd:provided_content({application, json}),
-      Head /= restd:cors(),
 
-      cats:unit( hercule_bucket:schema(Bucket) ),
+      cats:unit( hercule:entity(Bucket, Key) ),
 
-      Http /= restd:to_json(Head, _),
-      _ /= restd:accesslog(Http)
+      _ /= restd:to_json(_)
+   ].
+
+%%
+%%
+knowledge() ->
+   [reader ||
+      Path   /= restd:path("/buckets/:id/iris/:key"),
+      Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
+         IRI /= cats:optionT({badkey, key}, lens:get(lens:pair(<<"key">>), Path)),
+           _ /= restd:method('GET'),
+           _ /= restd:provided_content({application, json}),
+
+      cats:unit( hercule:entity(Bucket, elasticlog:identity(IRI)) ),
+
+      _ /= restd:to_json(_)
+   ].
+
+%%-----------------------------------------------------------------------------
+%%
+%% intake / write interface
+%%
+%%-----------------------------------------------------------------------------
+
+%%
+%%
+fact() ->
+   [reader ||
+      Path   /= restd:path("/buckets/:id/facts"),
+      Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
+           _ /= restd:method('POST'),
+           _ /= restd:accepted_content({application, json}),
+           _ /= restd:provided_content({application, json}),
+        Fact /= restd:as_json(),
+
+      cats:unit( hercule:fact(Bucket, Fact) ),
+
+      _ /= restd:to_json(_)
    ].
 
 
@@ -84,60 +134,44 @@ commit() ->
            _ /= restd:method('GET'),
 
       cats:unit( infusion:commit(Stream, Bucket) ),
-      Http /= restd:to_json({ok, Bucket}),
-      _ /= restd:accesslog(Http)
+      _ /= restd:to_json({ok, Bucket})
+   ].
+
+
+%%-----------------------------------------------------------------------------
+%%
+%% bucket interface
+%%
+%%-----------------------------------------------------------------------------
+
+%%
+%%
+bucket() ->
+   [reader ||
+      Path   /= restd:path("/buckets/:id"),
+      Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
+           _ /= restd:method('PUT'),
+           _ /= restd:accepted_content({application, json}),   
+      Schema /= restd:as_json(),
+
+      cats:unit(hercule_bucket:create(Bucket, Schema)),
+
+           _ /= restd:to_json(_)
    ].
 
 %%
 %%
-deduct() ->
+schema() ->
    [reader ||
-      Path   /= restd:path("/buckets/:id/deduct"),
+        Path /= restd:path("/buckets/:id"),
       Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
-           _ /= restd:method('POST'),
-           _ /= restd:accepted_content({text, plain}),
-           _ /= restd:provided_content({application, json}),
-      Datalog /= restd:as_text(),
-      Head /= restd:cors(),
-
-      cats:unit( hercule:deduct(Bucket, Datalog) ),
-
-      Http /= restd:to_json(Head, _),
-      _ /= restd:accesslog(Http)
-   ].
-
-%%
-%%
-entity() ->
-   [reader ||
-      Path   /= restd:path("/buckets/:id/keys/:key"),
-      Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
-         Key /= cats:optionT({badkey, key}, lens:get(lens:pair(<<"key">>), Path)),
            _ /= restd:method('GET'),
            _ /= restd:provided_content({application, json}),
-      Head /= restd:cors(),
 
-      cats:unit( hercule:entity(Bucket, Key) ),
+      cats:unit( hercule_bucket:schema(Bucket) ),
 
-      Http /= restd:to_json(Head, _),
-      _ /= restd:accesslog(Http)
+           _ /= restd:to_json(_)
    ].
 
-%%
-%%
-fact() ->
-   [reader ||
-      Path   /= restd:path("/buckets/:id/facts"),
-      Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
-           _ /= restd:method('POST'),
-           _ /= restd:accepted_content({application, json}),
-           _ /= restd:provided_content({application, json}),
-        Fact /= restd:as_json(),
-
-      cats:unit( hercule:fact(Bucket, Fact) ),
-
-      Http /= restd:to_json(_),
-      _ /= restd:accesslog(Http)
-   ].
 
 

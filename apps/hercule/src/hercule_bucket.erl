@@ -8,13 +8,26 @@
 
 %%
 %%
+bucket(Id) ->
+   [identity ||
+      opts:val(storage, hercule),
+      uri:new(_),
+      uri:segments([Id], _)
+   ].
+
+%%
+%%
 create(Id, Schema) ->
    [either ||
       Sock <- esio:socket(bucket(Id), []),
-      Data <- cats:unit( elasticlog:schema(Sock, encode_schema(Schema))),
+      elasticlog:schema(Sock, encode_schema(Schema)),
       esio:close(Sock),
-      cats:flatten(Data)
+      cats:unit(Id)
    ].
+
+encode_schema(Schema) ->
+   [{Key, semantic:compact(Type)} 
+      || {Key, Type} <- maps:to_list(Schema)].
 
 %%
 %%
@@ -29,21 +42,9 @@ schema(Id) ->
       cats:flatten(Data)
    ].
 
-bucket(Id) ->
-   [identity ||
-      opts:val(storage, hercule),
-      uri:new(_),
-      uri:segments([Id], _)
-   ].
-
-encode_schema(Schema) ->
-   [{semantic:compact(Key), semantic:compact(Type)} 
-      || {Key, Type} <- maps:to_list(Schema)].
-
-
 decode_schema(Schema) ->
-   maps:from_list([{iri(Key), iri(Type)} 
-      || {Key, Type} <- Schema, Type =/= undefined, Key =/= undefined]).
+   maps:from_list([{Key, iri(Type)} 
+      || {Key, Type} <- maps:to_list(Schema), Type =/= undefined, Key =/= undefined]).
 
 iri({iri, Prefix, Suffix}) ->
    <<Prefix/binary, $:, Suffix/binary>>.

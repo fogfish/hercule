@@ -19,7 +19,7 @@
 
 -export([start/0]).
 -export([
-   deduct/2,
+   deduct/3,
    entity/2,
    fact/2
 ]).
@@ -31,8 +31,8 @@ start() ->
 
 %%
 %%
-deduct(Bucket, Datalog) ->
-   pts:call(hercule, Bucket, {deduct, Datalog}, infinity).
+deduct(Bucket, N, Datalog) ->
+   pts:call(hercule, Bucket, {deduct, N, Datalog}, infinity).
 
 %%
 %%
@@ -42,35 +42,8 @@ entity(Bucket, Key) ->
 %%
 %% {
 %%    "@id": "subject"
-%%    "predicate": {"@value": "object", "@type": "type"}  
+%%    "predicate": "object"  
 %% }
-fact(Bucket, #{<<"@id">> := _} = JsonLD) ->
-   [either ||
-      cats:unit( jsonld_to_facts(JsonLD) ),
-      cats:unit( [patch(Bucket, X) || X <- _] ),
-      cats:sequence(_)
-   ];
-
-fact(Bucket, #{<<"s">> := S, <<"p">> := P, <<"o">> := O, <<"type">> := Type}) ->
-   patch(Bucket, encode(S, P, O, Type)).
-
-jsonld_to_facts(#{<<"@id">> := S} = JsonLD) ->
-   [encode(S, P, O, Type) ||
-      {P, #{<<"@value">> := O, <<"@type">> := Type}} <- maps:to_list(JsonLD),
-      P =/= <<"@id">>
-   ].
-
-patch(Bucket, Fact) -> 
-   pts:call(hercule, Bucket, {fact, Fact}, infinity).
-
-%%
-%%
-encode(S, P, O, Type) ->
-   #{
-      s    => semantic:compact(S), 
-      p    => semantic:compact(P), 
-      o    => O, 
-      type => semantic:compact(Type)
-   }.
-
+fact(Bucket, JsonLD) ->
+   pts:call(hercule, Bucket, {fact, JsonLD}, infinity).
 
