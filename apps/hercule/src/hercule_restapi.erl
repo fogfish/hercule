@@ -21,13 +21,13 @@ endpoints() ->
       entity(),
       knowledge(),
 
-
+      fact(),
+      stream(),
+      commit(),
 
       bucket(),
       schema(),
-      stream(),
-      commit(),
-      fact(),
+
       restd_static:react("/console", hercule, 'hercule-console')
    ].
 
