@@ -10,7 +10,7 @@
  {<<"datum">>,{pkg,<<"datum">>,<<"4.3.5">>},1},
  {<<"elasticlog">>,
   {git,"https://github.com/fogfish/elasticlog",
-       {ref,"352eec5b94c1a744a5f273f5122b349d66af571b"}},
+       {ref,"1a8665ee0186366e6cd84f788d3d0f4aea40d68b"}},
   0},
  {<<"esio">>,
   {git,"https://github.com/fogfish/esio",
