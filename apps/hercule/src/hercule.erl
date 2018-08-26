@@ -19,9 +19,9 @@
 
 -export([start/0]).
 -export([
-   deduct/3,
-   entity/2,
-   fact/2
+   deduct/4,
+   entity/3,
+   fact/4
 ]).
 
 start() ->
@@ -31,19 +31,36 @@ start() ->
 
 %%
 %%
-deduct(Bucket, N, Datalog) ->
-   pts:call(hercule, Bucket, {deduct, N, Datalog}, infinity).
+deduct(User, Bucket, N, Datalog) ->
+   pts:call(hercule, Bucket, {deduct, User, N, Datalog}, infinity).
 
 %%
 %%
-entity(Bucket, Key) ->
-   pts:call(hercule, Bucket, {entity, Key}, infinity).
+entity(User, Bucket, Key) ->
+   case
+      pts:call(hercule, Bucket, {entity, Key}, infinity)
+   of
+      {ok, #{<<"dc:creator">> := User} = Entity} ->
+         {ok, Entity};
+      {ok, _} ->
+         {error, forbidden};
+      {error, _} = Error ->
+         Error
+   end.
 
 %%
 %% {
 %%    "@id": "subject"
 %%    "predicate": "object"  
 %% }
-fact(Bucket, JsonLD) ->
-   pts:call(hercule, Bucket, {fact, JsonLD}, infinity).
+fact(User, Bucket, Key, JsonLD) ->
+   case entity(User, Bucket, Key) of
+      {error, not_found} ->
+         pts:call(hercule, Bucket, {fact, JsonLD#{<<"dc:creator">> => User}}, infinity);
+      {ok, _} ->
+         pts:call(hercule, Bucket, {fact, JsonLD#{<<"dc:creator">> => User}}, infinity);
+      Error ->
+         Error
+   end.
+
 

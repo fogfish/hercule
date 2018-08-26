@@ -7,13 +7,15 @@
       {applications,[
          kernel,
          stdlib,
+         ssl,
          lager,
          htcodec,
          restd,
          elasticlog,
          clue,
          pts,
-         infusion
+         infusion,
+         permit
       ]},
       {mod, {hercule_app, []}},
       {env, []}

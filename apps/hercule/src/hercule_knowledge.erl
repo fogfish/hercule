@@ -34,14 +34,18 @@ free(_, #state{sock = Sock}) ->
 
 %%
 %%
-deduct({deduct, N, Datalog}, Pipe, #state{sock = Sock} = State) ->
+deduct({deduct, User, N, Datalog}, Pipe, #state{sock = Sock} = State) ->
    try
       io:format(">>>>>>>>~n~s~n>>>>>>>>~n", [erlang:iolist_to_binary(Datalog)]),
       Script = datalog:p( scalar:c( erlang:iolist_to_binary(Datalog) ) ),
       Json = stream:list(N, 
          elasticlog:jsonify(
             datalog:schema(Script), 
-            datalog:q(datalog:c(elasticlog, Script), Sock)
+            elasticlog:q(
+               datalog:c(elasticlog, Script), 
+               #{<<"user">> => User}, 
+               Sock
+            )
          )
       ),
       pipe:ack(Pipe, {ok, Json})
