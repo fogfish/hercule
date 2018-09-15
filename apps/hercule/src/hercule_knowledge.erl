@@ -43,7 +43,7 @@ deduct({deduct, User, N, Datalog}, Pipe, #state{sock = Sock} = State) ->
             datalog:schema(Script), 
             elasticlog:q(
                datalog:c(elasticlog, Script), 
-               #{<<"user">> => User}, 
+               #{<<"username">> => User}, 
                Sock
             )
          )

@@ -51,13 +51,13 @@ restapi() ->
    restd:spec(
       hercule_restapi:endpoints(),
       hercule_restapi:filters(),
-      [
-         {port, opts:val(port, "http://*:8080", hercule)}, 
-         {backlog, 1024},
-         {sndbuf,  64 * 1024 * 1024},
-         {recbuf, 256 * 1024 * 1024},
-         {queue,   10 * 1024}
-      ]
+      #{
+         port => opts:val(port, "http://*:8080", hercule), 
+         backlog => 1024,
+         sndbuf => 64 * 1024 * 1024,
+         recbuf => 256 * 1024 * 1024,
+         capacity => 10 * 1024
+      }
    ).
 
 %%
