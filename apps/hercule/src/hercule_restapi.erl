@@ -36,11 +36,11 @@ endpoints() ->
 %%
 %%
 auth(<<"Bearer ", Jwt/binary>>, _) ->
-  [either ||
-    %% @todo: permit:include(Jwt, #{<<"aud">> => _, <<"iss">> => _})
-    permit:include(Jwt, #{<<"uid">> => true}),
-    cats:unit( lens:get(lens:at(<<"sub">>), _) )
-  ].
+   [either ||
+      %% @todo: permit:include(Jwt, #{<<"aud">> => _, <<"iss">> => _})
+      permit:include(Jwt, #{<<"uid">> => true}),
+      cats:unit( lens:get(lens:at(<<"sub">>), _) )
+   ].
 
 
 
@@ -57,7 +57,7 @@ deduct() ->
       Path   /= restd:path("/buckets/:id/deduct"),
       Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
            _ /= restd:method('POST'),
-        User /= restd:authorize(fun auth/2),      
+        User /= restd:authorize(fun auth/2),
            _ /= restd:accepted_content({text, plain}),
            _ /= restd:provided_content({application, json}),
         Opts /= restd:q(),
