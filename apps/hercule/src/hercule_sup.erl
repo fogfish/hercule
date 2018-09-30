@@ -47,21 +47,6 @@ init([]) ->
 
 %%
 %%
-restapi() ->
-   restd:spec(
-      hercule_restapi:endpoints(),
-      hercule_restapi:filters(),
-      #{
-         port => opts:val(port, "http://*:8080", hercule), 
-         backlog => 1024,
-         sndbuf => 64 * 1024 * 1024,
-         recbuf => 256 * 1024 * 1024,
-         capacity => 10 * 1024
-      }
-   ).
-
-%%
-%%
 knowledge() ->
    [
       hercule,
@@ -73,4 +58,38 @@ knowledge() ->
       ]
    ].
 
+%%
+%%
+restapi() ->
+   restd:spec(
+      hercule_restapi:endpoints(),
+      hercule_restapi:filters(),
+      #{
+         port => opts:val(port, hercule)
+      ,  backlog => 1024
+      ,  sock =>  so(uri:new(opts:val(port, hercule)))
+      }
+   ).
 
+so({uri, http, _}) ->
+   #{};
+
+so({uri, https, _}) ->
+   #{
+      certfile => certificate()
+   ,  keyfile => private_key()
+   }.
+
+
+certificate() ->
+   File = filename:join([code:priv_dir(hercule), "certificate.pem"]),
+   {ok, Steam} = s3am:fetch(opts:val(tls_certificate, hercule)),
+   ok = file:write_file(File, stream:list(Steam)),
+   File.
+
+
+private_key() ->
+   File = filename:join([code:priv_dir(hercule), "private_key.pem"]),
+   {ok, Steam} = s3am:fetch(opts:val(tls_private_key, hercule)),
+   ok = file:write_file(File, stream:list(Steam)),
+   File.

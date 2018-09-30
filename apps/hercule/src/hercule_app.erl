@@ -26,6 +26,7 @@
 %%
 start(_Type, _Args) ->
    clue:log(clue:define(counter, {hercule, intake})),
+   {ok, _} = permit:config(),
    hercule_sup:start_link(). 
 
 %%
