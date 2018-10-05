@@ -8,7 +8,7 @@
 filters() ->
    [
       restd:cors(),
-      restd:compress(),
+      restd:compress(deflate),
       restd:accesslog()
    ].
 
