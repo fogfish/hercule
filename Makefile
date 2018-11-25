@@ -11,6 +11,6 @@ react:
 	cd apps/hercule/priv/hercule-console ;\
 	ln -s /tmp/hercule-console/node_modules node_modules;\
 	npm install ;\
-	PUBLIC_URL=/console npm run build ;\
+	PUBLIC_URL=/hercule npm run build ;\
 	rm node_modules ;\
 	cd -

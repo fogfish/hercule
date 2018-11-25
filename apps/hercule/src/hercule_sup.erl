@@ -39,24 +39,37 @@ init([]) ->
       {
          {one_for_one, 4, 1800},
          [
-            ?CHILD(supervisor, pts, knowledge()),
-            restapi()
+            global_pool()
+         ,  bucket_pool()
+         ,  restapi()
          ]
       }
    }.
 
 %%
 %%
-knowledge() ->
-   [
-      hercule,
+global_pool() ->
+   ?CHILD(supervisor, hercule_socket_sup, 
       [
-         'read-through',
-         {keylen,    inf},
-         {entity,    hercule_knowledge},
-         {factory,   temporary}
+         hercule_config:pool()
+      ,  hercule_config:elastic()
       ]
-   ].
+   ).
+
+%%
+%%
+bucket_pool() ->
+   ?CHILD(supervisor, pts,
+      [
+         hercule,
+         [
+            'read-through',
+            {keylen,    2},
+            {entity,    hercule_bucket},
+            {factory,   permanent}
+         ]
+      ]
+   ).
 
 %%
 %%

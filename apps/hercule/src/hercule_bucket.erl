@@ -1,51 +1,36 @@
+%% @doc
+%%
 -module(hercule_bucket).
+-behaviour(pipe).
 -compile({parse_transform, category}).
 
 -export([
-   create/2,
-   schema/1
+   start_link/2,
+   init/1,
+   free/2,
+   pipe/3
 ]).
 
-%%
-%%
-bucket(Id) ->
-   [identity ||
-      opts:val(storage, hercule),
-      uri:new(_),
-      uri:segments([Id], _)
-   ].
+
+-record(state, {
+   sock = undefined :: _
+}).
+
+
+start_link(Ns, Bucket) ->
+   pipe:start_link({via, pns, {urn, Ns, Bucket}}, ?MODULE, [Bucket], []).
+
+init([{Bucket, _}]) ->
+   {ok, Sock} = esio:socket(uri:segments([Bucket], hercule_config:elastic())),
+   {ok, pipe, #state{sock = Sock}}.
+
+free(_, #state{sock = Sock}) ->
+   esio:close(Sock).
 
 %%
 %%
-create(Id, Schema) ->
-   [either ||
-      Sock <- esio:socket(bucket(Id), []),
-      elasticlog:schema(Sock, encode_schema(Schema)),
-      esio:close(Sock),
-      cats:unit(Id)
-   ].
+pipe({get, {_, _, Key}}, Pipe, #state{sock = Sock} = State) ->
+   {reply, esio:get(Sock, Key), pipe, State};
 
-encode_schema(Schema) ->
-   [{Key, semantic:compact(Type)} 
-      || {Key, Type} <- maps:to_list(Schema)].
-
-%%
-%%
-schema(Id) ->
-   [either ||
-      Sock <- esio:socket(bucket(Id), []),
-      Data <- cats:unit([either ||
-         elasticlog:schema(Sock),
-         cats:unit(decode_schema(_))
-      ]),
-      esio:close(Sock),
-      cats:flatten(Data)
-   ].
-
-decode_schema(Schema) ->
-   maps:from_list([{Key, iri(Type)} 
-      || {Key, Type} <- maps:to_list(Schema), Type =/= undefined, Key =/= undefined]).
-
-iri({iri, Prefix, Suffix}) ->
-   <<Prefix/binary, $:, Suffix/binary>>.
-
+pipe({put, _, JsonLD}, Pipe, #state{sock = Sock} = State) ->
+   {reply, elasticlog:append(Sock, JsonLD), pipe, State}.

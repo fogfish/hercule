@@ -19,7 +19,7 @@
 
 -export([start/0]).
 -export([
-   deduct/4,
+   deduct/2,
    entity/3,
    fact/4
 ]).
@@ -31,19 +31,28 @@ start() ->
 
 %%
 %%
-deduct(User, Bucket, N, Datalog) ->
-   pts:call(hercule, Bucket, {deduct, User, N, Datalog}, infinity).
+deduct(Owner, Datalog) ->
+   io:format(">>>>>>>>~n~s~n>>>>>>>>~n", [erlang:iolist_to_binary(Datalog)]),
+   Script = datalog:p( scalar:c( erlang:iolist_to_binary(Datalog) ) ),
+   {ok,
+      elasticlog:jsonify(
+         datalog:schema(Script),
+         elasticlog:q(
+            datalog:c(elasticlog, Script),
+            implicitly(Owner),
+            socket()
+         )
+      )
+   }.
 
 %%
 %%
-entity(User, Bucket, Key) ->
+entity(Owner, Bucket, Key) ->
    case
-      pts:call(hercule, Bucket, {entity, Key}, infinity)
+      pts:get(hercule, key(Bucket, Key), infinity)
    of
-      {ok, #{<<"dc:creator">> := User} = Entity} ->
-         {ok, Entity};
-      {ok, _} ->
-         {error, forbidden};
+      {ok, Entity} ->
+         allowed(Owner, Entity);
       {error, _} = Error ->
          Error
    end.
@@ -53,14 +62,59 @@ entity(User, Bucket, Key) ->
 %%    "@id": "subject"
 %%    "predicate": "object"  
 %% }
-fact(User, Bucket, Key, JsonLD) ->
-   case entity(User, Bucket, Key) of
+fact(Owner, Bucket, Key, JsonLD) ->
+   case entity(Owner, Bucket, Key) of
       {error, not_found} ->
-         pts:call(hercule, Bucket, {fact, JsonLD#{<<"dc:creator">> => User}}, infinity);
+         pts:call(hercule, key(Bucket, Key), JsonLD#{<<"dc:creator">> => Owner}, infinity);
       {ok, _} ->
-         pts:call(hercule, Bucket, {fact, JsonLD#{<<"dc:creator">> => User}}, infinity);
+         pts:call(hercule, key(Bucket, Key), JsonLD#{<<"dc:creator">> => Owner}, infinity);
       Error ->
          Error
    end.
 
+%%-----------------------------------------------------------------------------
+%%
+%% private
+%%
+%%-----------------------------------------------------------------------------
 
+%%
+%%
+socket() ->
+   [identity ||
+      hercule_config:pool()
+   ,  rand:uniform(_)
+   ,  pns:whereis(socket, _)
+   ].
+
+%%
+%%
+key(Bucket, Key) ->
+   [identity ||
+      hercule_config:pool()
+   ,  rand:uniform(_)
+   ,  cats:unit({Bucket, _, Key})
+   ].
+
+%%
+%%
+implicitly(Owner) ->
+   case hercule_config:owner_permit() of
+      1 -> #{<<"dc:creator">> => Owner};
+      _ -> undefined
+   end.
+
+%%
+%%
+allowed(Owner, Entity) ->
+   case hercule_config:owner_permit() of
+      1 ->
+         case maps:get(<<"dc:creator">>, Entity, undefined) of
+            Owner ->
+               {ok, Entity};
+            _ ->
+               {error, forbidden}
+         end;
+      _ ->
+         {ok, Entity}
+   end.

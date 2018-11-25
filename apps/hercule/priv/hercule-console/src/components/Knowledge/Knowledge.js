@@ -1,9 +1,11 @@
 import React from 'react'
-import { bindActionCreators } from 'redux'
-import { connect } from 'react-redux'
+// import { bindActionCreators } from 'redux'
+// import { connect } from 'react-redux'
 import { Row, Column, Card, Table, THead, TBody, TR, TH, TD, Button } from 'react-dress-code'
 import Expandable from './Expandable'
 import { Link } from 'react-router-dom'
+import { lifecycle } from 'recompact'
+import { Knowledge } from 'components/Datalog'
 
 
 const Value = ({schema, data}) => (
@@ -14,7 +16,7 @@ const Value = ({schema, data}) => (
     : <TD>{data}</TD>
 )
 
-const Knowledge = ({keys, knowledge}) => (
+const XKnowledge = ({ keys, knowledge }) => (
   <Row>
     <Column large={12} medium={12} small={12}>
       {keys.length > 0 &&
@@ -40,6 +42,4 @@ const Knowledge = ({keys, knowledge}) => (
   </Row>
 )
 
-const model = state => (state.api)
-const actions = dispatch => bindActionCreators({  }, dispatch)
-export default connect(model, actions)(Knowledge)
+export default Knowledge(XKnowledge)

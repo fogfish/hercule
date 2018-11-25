@@ -1,28 +1,22 @@
 import React from 'react'
-import {
-  BrowserRouter as Router,
-  Route
-} from 'react-router-dom'
 import './App.css'
 
+import { Screen } from 'layout/Screen'
+import { Header } from 'layout/Header'
+import { Unauthorized } from 'components/Unauthorized'
+import { Query } from 'components/Query'
+import { OAuth2 } from 'toolkit/OAuth2'
 
-import { Layout } from './components/Layout'
-import { VisualLog } from './components/VisualLog'
-import { HistoryLog } from './components/HistoryLog'
-import { Knowledge } from './components/Knowledge'
-import { Entity } from './components/Entity'
+
+const Private = OAuth2(() => (null))(Unauthorized)(Query)
 
 const App = () => (
-  <div>
-    <Router>
-      <Layout>
-        <Route exact path="/console" component={VisualLog} />
-        <Route exact path="/console/history" component={HistoryLog} />
-        <Route exact path="/console/entity/:id" component={Entity} />
-        <Route path="/" component={Knowledge} />
-      </Layout>
-    </Router>
-  </div>
+  <React.Fragment>
+    <Screen>
+      <Header />
+      <Private />
+    </Screen>
+  </React.Fragment>
 )
 
 export default App

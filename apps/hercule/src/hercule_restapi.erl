@@ -8,7 +8,7 @@
 filters() ->
    [
       restd:cors(),
-      restd:compress(deflate),
+      % restd:compress(deflate),
       restd:accesslog()
    ].
 
@@ -22,6 +22,7 @@ endpoints() ->
       knowledge(),
 
       fact(),
+
       % @todo: design auth schema
       % stream(),
       % commit(),
@@ -29,7 +30,8 @@ endpoints() ->
       bucket(),
       schema(),
 
-      restd_static:react("/console", hercule, 'hercule-console')
+      restd_static:react_env_js("/hercule", config()),
+      restd_static:react("/hercule", hercule, 'hercule-console')
    ].
 
 
@@ -42,7 +44,15 @@ auth(<<"Bearer ", Jwt/binary>>, _) ->
       cats:unit( lens:get(lens:at(<<"sub">>), _) )
    ].
 
-
+%%
+%%
+config() ->
+   #{
+      'OAUTH2_AUTHORIZE' => typecast:s(opts:val(oauth2_authorize, permit))
+   ,  'OAUTH2_TOKEN' => typecast:s(opts:val(oauth2_token, permit))
+   ,  'OAUTH2_CLIENT_ID' => typecast:s(opts:val(oauth2_client_id, permit))
+   ,  'OAUTH2_FLOW_TYPE' => typecast:s(opts:val(oauth2_flow_type, permit))
+   }.
 
 %%-----------------------------------------------------------------------------
 %%
@@ -54,23 +64,14 @@ auth(<<"Bearer ", Jwt/binary>>, _) ->
 %%
 deduct() ->
    [reader ||
-      Path   /= restd:path("/buckets/:id/deduct"),
-      Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
+      Path   /= restd:path("/hercule/deduct"),
            _ /= restd:method('POST'),
-        User /= restd:authorize(fun auth/2),
+       Owner /= restd:authorize(fun auth/2),
            _ /= restd:accepted_content({text, plain}),
            _ /= restd:provided_content({application, json}),
-        Opts /= restd:q(),
       Script /= restd:as_text(),
 
-      cats:unit( 
-         hercule:deduct(
-            User,
-            Bucket,
-            scalar:i(lens:get(lens:pair(<<"limit">>, 100), Opts)),
-            Script
-         )
-      ),
+      cats:unit( hercule:deduct(Owner, Script) ),
       _ /= restd:to_json(_)
    ].
 
@@ -78,14 +79,14 @@ deduct() ->
 %%
 entity() ->
    [reader ||
-      Path   /= restd:path("/buckets/:id/keys/:key"),
+      Path   /= restd:path("/hercule/buckets/:id/keys/:key"),
       Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
          Key /= cats:optionT({badkey, key}, lens:get(lens:pair(<<"key">>), Path)),
            _ /= restd:method('GET'),
-        User /= restd:authorize(fun auth/2),           
+       Owner /= restd:authorize(fun auth/2),
            _ /= restd:provided_content({application, json}),
 
-      cats:unit( hercule:entity(User, Bucket, Key) ),
+      cats:unit( hercule:entity(Owner, Bucket, Key) ),
 
       _ /= restd:to_json(_)
    ].
@@ -94,14 +95,14 @@ entity() ->
 %%
 knowledge() ->
    [reader ||
-      Path   /= restd:path("/buckets/:id/iris/:key"),
+      Path   /= restd:path("/hercule/buckets/:id/iris/:key"),
       Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
          IRI /= cats:optionT({badkey, key}, lens:get(lens:pair(<<"key">>), Path)),
            _ /= restd:method('GET'),
-        User /= restd:authorize(fun auth/2),           
+       Owner /= restd:authorize(fun auth/2),
            _ /= restd:provided_content({application, json}),
 
-      cats:unit( hercule:entity(User, Bucket, elasticlog:identity(IRI)) ),
+      cats:unit( hercule:entity(Owner, Bucket, elasticlog:identity(IRI)) ),
 
       _ /= restd:to_json(_)
    ].
@@ -120,12 +121,12 @@ fact() ->
       Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
          IRI /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"key">>), Path)),
            _ /= restd:method('POST'),
-        User /= restd:authorize(fun auth/2),
+       Owner /= restd:authorize(fun auth/2),
            _ /= restd:accepted_content({application, json}),
            _ /= restd:provided_content({application, json}),
         Fact /= restd:as_json(),
 
-      cats:unit( hercule:fact(User, Bucket, elasticlog:identity(IRI), Fact) ),
+      cats:unit( hercule:fact(Owner, Bucket, elasticlog:identity(IRI), Fact) ),
 
       _ /= restd:to_json(_)
    ].
@@ -166,13 +167,14 @@ fact() ->
 %%
 bucket() ->
    [reader ||
-      Path   /= restd:path("/buckets/:id"),
+      Path   /= restd:path("/hercule/buckets/:id"),
       Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
            _ /= restd:method('PUT'),
-           _ /= restd:accepted_content({application, json}),   
+       Owner /= restd:authorize(fun auth/2),
+           _ /= restd:accepted_content({application, json}),
       Schema /= restd:as_json(),
 
-      cats:unit(hercule_bucket:create(Bucket, Schema)),
+      cats:unit(hercule_schema:create(Bucket, Schema)),
 
            _ /= restd:to_json(_)
    ].
@@ -181,13 +183,13 @@ bucket() ->
 %%
 schema() ->
    [reader ||
-        Path /= restd:path("/buckets/:id"),
+        Path /= restd:path("/hercule/buckets/:id"),
       Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
            _ /= restd:method('GET'),
+       Owner /= restd:authorize(fun auth/2),
            _ /= restd:provided_content({application, json}),
 
-      cats:unit( hercule_bucket:schema(Bucket) ),
-
+      cats:unit( hercule_schema:lookup(Bucket) ),
            _ /= restd:to_json(_)
    ].
 
