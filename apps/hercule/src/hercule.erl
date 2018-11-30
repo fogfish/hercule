@@ -16,6 +16,7 @@
 %%
 -module(hercule).
 -compile({parse_transform, category}).
+-include_lib("datum/include/datum.hrl").
 
 -export([start/0]).
 -export([
@@ -34,7 +35,7 @@ start() ->
 deduct(Owner, Datalog) ->
    io:format(">>>>>>>>~n~s~n>>>>>>>>~n", [erlang:iolist_to_binary(Datalog)]),
    Script = datalog:p( scalar:c( erlang:iolist_to_binary(Datalog) ) ),
-   {ok,
+   case
       elasticlog:jsonify(
          datalog:schema(Script),
          elasticlog:q(
@@ -43,7 +44,12 @@ deduct(Owner, Datalog) ->
             socket()
          )
       )
-   }.
+   of
+      ?stream() ->
+         {error, not_found};
+      Stream    ->
+         {ok, Stream}
+   end.
 
 %%
 %%
