@@ -71,9 +71,9 @@ entity(Owner, Bucket, Key) ->
 fact(Owner, Bucket, Key, JsonLD) ->
    case entity(Owner, Bucket, Key) of
       {error, not_found} ->
-         pts:call(hercule, key(Bucket, Key), JsonLD#{<<"dc:creator">> => Owner}, infinity);
+         pts:put(hercule, key(Bucket, Key), JsonLD#{<<"dc:creator">> => Owner}, infinity);
       {ok, _} ->
-         pts:call(hercule, key(Bucket, Key), JsonLD#{<<"dc:creator">> => Owner}, infinity);
+         pts:put(hercule, key(Bucket, Key), JsonLD#{<<"dc:creator">> => Owner}, infinity);
       Error ->
          Error
    end.
