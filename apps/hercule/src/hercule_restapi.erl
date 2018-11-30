@@ -117,7 +117,7 @@ knowledge() ->
 %%
 fact() ->
    [reader ||
-      Path   /= restd:path("/buckets/:id/iris/:key"),
+      Path   /= restd:path("/hercule/buckets/:id/iris/:key"),
       Bucket /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"id">>), Path)),
          IRI /= cats:optionT({badkey, bucket}, lens:get(lens:pair(<<"key">>), Path)),
            _ /= restd:method('POST'),
