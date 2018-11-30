@@ -52,7 +52,7 @@ global_pool() ->
    ?CHILD(supervisor, hercule_socket_sup, 
       [
          hercule_config:pool()
-      ,  hercule_config:elastic()
+      ,  hercule_config:storage()
       ]
    ).
 

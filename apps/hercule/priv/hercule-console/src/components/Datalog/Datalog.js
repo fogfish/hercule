@@ -16,7 +16,7 @@ export const Datalog = compose(
       props.setKnowledge([])
       props.setError(undefined)
       try {
-        const k = await secureIO('http://localhost:8080/hercule/deduct', {
+        const k = await secureIO('/hercule/deduct', {
           method: 'POST',
           headers: {'Content-Type': 'text/plain'},
           body: props.query

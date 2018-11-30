@@ -21,7 +21,7 @@ start_link(Ns, Bucket) ->
    pipe:start_link({via, pns, {urn, Ns, Bucket}}, ?MODULE, [Bucket], []).
 
 init([{Bucket, _}]) ->
-   {ok, Sock} = esio:socket(uri:segments([Bucket], hercule_config:elastic())),
+   {ok, Sock} = esio:socket(uri:segments([Bucket], hercule_config:storage())),
    {ok, pipe, #state{sock = Sock}}.
 
 free(_, #state{sock = Sock}) ->

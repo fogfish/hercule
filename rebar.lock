@@ -52,7 +52,7 @@
   1},
  {<<"permit">>,
   {git,"https://github.com/fogfish/permit",
-       {ref,"281c8ba302a283d871d32ef25362420d965ef62e"}},
+       {ref,"4a81dc04c809c1fb9e1c698484ced2f84f23778a"}},
   0},
  {<<"pipe">>,{pkg,<<"pipes">>,<<"2.0.0">>},1},
  {<<"pns">>,

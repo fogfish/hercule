@@ -10,7 +10,7 @@
 %%
 bucket(Id) ->
    [identity ||
-      hercule_config:elastic(),
+      hercule_config:storage(),
       uri:segments([Id], _)
    ].
 

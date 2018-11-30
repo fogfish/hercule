@@ -23,7 +23,7 @@ const SchemaWithData = compose(
   withState('schema', 'setSchema', {}),
   lifecycle({
     componentWillMount() {
-      secureLookup('http://localhost:8080/hercule/buckets/*')
+      secureLookup('/hercule/buckets/*')
         .then(this.props.setSchema)
         .catch(() => null)
     }
