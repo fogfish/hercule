@@ -10,7 +10,7 @@
  {<<"eini">>,{pkg,<<"eini">>,<<"1.2.5">>},2},
  {<<"elasticlog">>,
   {git,"https://github.com/fogfish/elasticlog",
-       {ref,"8c9b5c3d9fdb6c6ac6728c78a773da4995387c60"}},
+       {ref,"86757eb61b9cf0240d2e30e5b3b62aae777adef3"}},
   0},
  {<<"erlcloud">>,{pkg,<<"erlcloud">>,<<"3.2.2">>},1},
  {<<"esio">>,
