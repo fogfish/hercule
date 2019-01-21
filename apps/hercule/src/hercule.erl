@@ -39,7 +39,7 @@ deduct(Owner, Datalog) ->
       elasticlog:jsonify(
          datalog:schema(Script),
          elasticlog:q(
-            datalog:c(elasticlog, Script),
+            datalog:c(elasticlog, Script, [{return, maps}]),
             implicitly(Owner),
             socket()
          )
