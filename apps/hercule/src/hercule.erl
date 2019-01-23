@@ -37,7 +37,6 @@ deduct(Owner, Datalog) ->
    Script = datalog:p( scalar:c( erlang:iolist_to_binary(Datalog) ) ),
    case
       elasticlog:jsonify(
-         datalog:schema(Script),
          elasticlog:q(
             datalog:c(elasticlog, Script, [{return, maps}]),
             implicitly(Owner),
