@@ -15,12 +15,20 @@ const Body = ({ columns, knowledge }) => (
     {knowledge.map(
       (k, i) => 
         <TR key={i}>
-          {columns.map((x, j) => <TD key={j}>{k[x]}</TD>)}
+          {columns.map(
+            (x, j) => (
+              <TD key={j}>
+                {typeof k[x] === 'object' ? JSON.stringify(k[x]) : k[x]}
+              </TD>
+            )
+          )}
         </TR>
       )
     }
   </TBody>
 )
+
+// <TD key={j}>{k[x]}</TD>
 
 export const Knowledge = Static(
   ({ knowledge, failed }) => (

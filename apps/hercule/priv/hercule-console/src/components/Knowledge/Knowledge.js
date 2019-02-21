@@ -19,7 +19,7 @@ const Value = ({schema, data}) => (
 const XKnowledge = ({ keys, knowledge }) => (
   <Row>
     <Column large={12} medium={12} small={12}>
-      {keys.length > 0 &&
+      {/*keys.length > 0 &&
       <Card>
         <Table>
           <THead>
@@ -37,9 +37,10 @@ const XKnowledge = ({ keys, knowledge }) => (
           </TBody>
         </Table>
       </Card>
-    }
+      */}
     </Column>
   </Row>
 )
 
-export default Knowledge(XKnowledge)
+// export default Knowledge(XKnowledge)
+export default () => (<div>xxx</div>)
