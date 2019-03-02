@@ -11,7 +11,7 @@
  {<<"eini">>,{pkg,<<"eini">>,<<"1.2.5">>},2},
  {<<"elasticlog">>,
   {git,"https://github.com/fogfish/elasticlog",
-       {ref,"8c35a50ed9fda2e56e44ca3dfd64b8c75bfbfd1d"}},
+       {ref,"cfb5960e17687896e420be8054b6fc912143daf5"}},
   0},
  {<<"erlcloud">>,{pkg,<<"erlcloud">>,<<"3.2.2">>},1},
  {<<"esio">>,
@@ -74,7 +74,7 @@
   0},
  {<<"semantic">>,
   {git,"https://github.com/fogfish/semantic",
-       {ref,"2b1f524e587839025ddace0a03b546319988e869"}},
+       {ref,"d88cc007708704b216d34e6ada43ca62de04080a"}},
   1},
  {<<"uid">>,{pkg,<<"uid">>,<<"1.3.3">>},1}]}.
 [
